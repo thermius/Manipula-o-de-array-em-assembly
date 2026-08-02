@@ -2,7 +2,7 @@
 Manipulação eficiente de arrays em Assembly x86-64 puro.  Duas rotinas: AlinharArray (elimina buracos) e MoverMemoria (abre vões).  Demonstra domínio de assembly, ponteiros e otimização de memória.
 # Manipulação de Arrays em Assembly x86-64
 
-Duas rotinas otimizadas em **assembly puro** para manipulação eficiente de arrays com controle preciso de memória.
+Duas rotinas otimizadas em assembly puro para manipulação eficiente de arrays com controle preciso de memória.
 
 ## 🎯 O Que É
 
