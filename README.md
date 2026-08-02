@@ -59,7 +59,7 @@ Depois (array alinhado):
 ### 2. **MoverMemoria** — Abre um vão no array
 
 **O que faz:**
-Desloca elementos de um array para abrir um espaço (vão) em uma posição específica. Útil para inserir dados sem sobrescrever existentes.
+Desloca elementos de um array para abrir um espaço (vão) em uma posição específica. 
 
 **Algoritmo (Deslocamento Progressivo):**
 1. Começa do último elemento
