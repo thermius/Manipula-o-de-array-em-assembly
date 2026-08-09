@@ -3,7 +3,7 @@
 
 /*declaração de função assembly*/
 extern int MoverMemoria (int64_t*, int64_t*, int64_t*);
-extern void AlinharArray (int64_t*,int64_t*);
+extern int AlinharArray (int64_t*,int64_t*);
 
 int main ()
 {
