@@ -251,10 +251,6 @@ Se mudar o tamanho dos dados, ajuste todos os offsets de 8 bytes.
 ---
 
 ## 📄 Licença
+© 2026. Todos os direitos reservados.
 
-© 2026. Todos os direitos reservados.  
-Este código é fornecido apenas para fins de portfólio. Nenhuma cópia, distribuição ou uso sem permissão explícita.
-
----
-
-**Desenvolvido como estudo profundo de assembly x86-64 e otimização de estruturas de dados.**
+Este projeto é disponibilizado exclusivamente para fins de portfólio e demonstração técnica. O código-fonte não pode ser copiado, redistribuído, modificado ou utilizado, integral ou parcialmente, sem autorização prévia e explícita do autor.
