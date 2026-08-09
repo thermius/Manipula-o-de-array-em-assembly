@@ -195,13 +195,6 @@ Os argumentos são passados em registradores (não na pilha):
 | 3º | RDX |
 | Retorno | RAX |
 
-### Registradores Usados
-
-- **R8, R9**: índices de iteração
-- **R10, R11**: endereços temporários
-- **RAX**: valor carregado, retorno da função
-- **RDX**: endereço do vão (entrada), comparação
-
 ### Tamanho dos Dados
 
 **Tudo é 8 bytes (64 bits)**, correspondente a `int64_t`:
