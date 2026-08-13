@@ -51,7 +51,7 @@ FIM_ERRO:
     RET
 
 FIM_SUCESSO_MOVER_MEMORIA:
-    MOV QWORD PTR [R10], -1
+    MOV QWORD PTR [R10], -1 /*Marca o vão com -1*/
     MOV RAX, 0              /*Retorna 0*/
     RET
 
