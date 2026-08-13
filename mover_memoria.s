@@ -94,29 +94,38 @@ Argumentos:
     2. Em RSI estará o endereço do ultimo indice do array;
 */
 
+Argumentos:
+    1. Em RDI estará o endereço do indice 0 do array;
+    2. Em RSI estará o endereço do ultimo indice do array;
+*/
+
     MOV R8, RDI         /*Carrega R8 com o valor do inicio do array*/
-    MOV R9, RSI         /*Carrega R9 com o valor do final do array*/
 
 VERIFICAR:
-    CMP R8, RSI
-    JG  FIM_SUCESSO_ALINHAR_ARRAY
-    MOV RAX, [R8]       /*Carrega RAX com o conteudo apontado por R8*/
-    CMP RAX, -1         /*Verifica se é um burraco*/
-    JE  DESLOCAR        /*Salta para a rotina que desloca se for buraco*/
-    ADD R8, 8           /*Aponta R8 para o proximo elemento*/
-    JMP VERIFICAR
+   CMP R8,RSI           /*Se R8 for igual o ultimo indice, retorna*/
+   JGE FIM_SUCESSO_ALINHAR_ARRAY
+   MOV R9, [R8]         /*Pega o elemento apontado por R8*/
+   CMP R9, -1           /*Compara com -1*/
+   JE DESLOCAR
+   ADD R8, 8
+   JMP VERIFICAR
 
 DESLOCAR:
-    MOV R11, R8         /*Carrega R11 com R8*/
-    ADD R11, 8          /*Aponta R11 para o proximo elemento do array*/
-    CMP R11, RSI        /*Verifica se R8 está apontado para fora do array*/
-    JG FIM_ERRO         /*Se sim, finaliza com erro pois o usuario tentou deslocar o ultimo elemento do array.*/
-    MOV R10, [R11]      /*Carrega R10 com o proximo elemento do array*/
-    MOV [R8], R10       /*Trás o elemento a frente de N para o endereço de N*/
-    MOV QWORD PTR [R11], -1 /*Marca o proximo elemento do array como -1 pois ele foi movido para a posição anterior.*/
-    ADD R8, 8           /*Aponta R8 para o proximo elemento, que será o proximo buraco*/
+    MOV R11, R8             /*Carrega R11 com R8*/
+    ADD R11, 8              /*Aponta R11 para o proximo elemento do array*/
+
+    MOV R10, [R11]          /*Não é permitir mover de memoria para memoria. Então usamos R10 para guardar o conteudo apontado por R11*/
+    MOV [R8], R10           /*Pega o elemento a frente (R11) e joga para tras (R8)*/
+    MOV R10, -1             /*Marca o proximo elemento como burraco*/
+    MOV [R11], R10          /*Marca o proximo elemento como burraco*/
+    ADD R8, 8               /*Avança 1 elemento do array*/
+    ADD R11,8               /*Avança 1 elemento do array*/
+    CMP R8, RSI             /*Se R8 chegar no final, R11 estará apontado pra fora do array. Sucesso*/
+    JE FIM_SUCESSO_ALINHAR_ARRAY
     JMP VERIFICAR
 
+    
 FIM_SUCESSO_ALINHAR_ARRAY:
     MOV RAX, 0              /*Retorna 0*/
     RET
+
