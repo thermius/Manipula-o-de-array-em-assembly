@@ -122,63 +122,58 @@ Pronto! Sem flags especiais, sem bibliotecas externas.
 ## 🧪 Teste em Execução
 
 ```
-$ ./programa
-
+$ thermius@arch: ./programa
 Antes da chamada assembly para alinhar o array:
 -1
-1
-2
-3
-4
-5
-6
-7
-8
-9
-
+10
+10
+10
+10
+10
+10
+10
+10
+10
 Depois da chamada assembly:
-1
-2
-3
-4
-5
-6
-7
-8
-9
+10
+10
+10
+10
+10
+10
+10
+10
+10
 -1
-
 Antes da chamada assembly para abri um vao:
-0
-2
-4
-6
-8
 10
-12
-14
-16
-18
-
+10
+10
+10
+10
+10
+10
+10
+10
+10
 Depois da chamada assembly para abri um vao:
-0
-2
-4
--1
-6
-8
 10
-12
-14
-16
-
-**Vão aberto no índice 3, marcado com -1**
+10
+10
+10
+10
+10
+10
+10
+-1
+10
+**Vão aberto no índice 8, marcado com -1**
 ```
 
 **O que aconteceu:**
 
 1. **AlinharArray**: buraco no índice 0 foi empurrado pro final
-2. **MoverMemoria**: vão aberto no índice 3, elementos deslocados pra direita, último elemento perdido
+2. **MoverMemoria**: vão aberto no índice 8, elementos deslocados pra direita, último elemento perdido
 
 ---
 
