@@ -3,7 +3,7 @@
 
 /*declaração de função assembly*/
 extern int MoverMemoria (int64_t*, int64_t*, int64_t*);
-extern int AlinharArray (int64_t*,int64_t*);
+extern void AlinharArray (int64_t*,int64_t*);
 
 int main ()
 {
@@ -14,7 +14,7 @@ int main ()
   int64_t array [10];
 
   /*Zera o array e cria um buraco no indice 0*/  
-  for (int i = 0; i < 10; i++ )  array[i] = i;
+  for (int i = 0; i < 10; i++ )  array[i] = 10;
   array [0] = -1;
 
   /*Exibe o antes*/
@@ -35,14 +35,14 @@ int main ()
   int64_t array2 [10];
 
   /*Inicializa o array e preenche com valores*/
-  for (int i = 0; i < 10; i++ ) array2[i] = i*2;
+  for (int i = 0; i < 10; i++ ) array2[i] = 10;
   
   /*Exibe o antes*/
   printf ("Antes da chamada assembly para abri um vao:\n");
   for (int i = 0; i < 10; i++ )   printf ("%i\n",array2 [i]); 
 
   /*Abre um vão no indice 3*/
-  MoverMemoria(&array2[0], &array2[9], &array2[3]);
+  MoverMemoria(&array2[0], &array2[9], &array2[8]);
 
   /*Exibe o depois*/
   printf ("Depois da chamada assembly para abri um vao:\n");
