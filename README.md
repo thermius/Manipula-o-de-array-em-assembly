@@ -246,6 +246,7 @@ Se mudar o tamanho dos dados, ajuste todos os offsets de 8 bytes.
 ---
 
 ## 📄 Licença
-© 2026. Todos os direitos reservados.
+
+Todos os direitos reservados.
 
 Este projeto é disponibilizado exclusivamente para fins de portfólio e demonstração técnica. O código-fonte não pode ser copiado, redistribuído, modificado ou utilizado, integral ou parcialmente, sem autorização prévia e explícita do autor.
