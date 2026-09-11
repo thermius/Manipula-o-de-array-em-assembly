@@ -1,251 +1,293 @@
 # Manipula-o-de-array-em-assembly
-Manipulação eficiente de arrays em Assembly x86-64 puro.  Duas rotinas: AlinharArray (elimina buracos) e MoverMemoria (abre vões).  Demonstra domínio de assembly, ponteiros e otimização de memória.
-# Manipulação de Arrays em Assembly x86-64
+Rotinas de baixo nível para abertura dinâmica de vãos e alinhamento de arrays, desenvolvidas em Assembly x86-64 e integradas a programas C.
 
-Duas rotinas otimizadas em assembly puro para manipulação eficiente de arrays com controle preciso de memória.
+## 🎯 Problema que o projeto resolve
 
-## 🎯 O Que É
+**Binary Search** e **Quick Sort** estão entre os algoritmos clássicos mais eficientes para busca e ordenação em arrays.
+Apesar de serem extremamente eficientes,o algortimo quebra quando um array sofre inserções, remoções ou reorganizações e passa a possuir vãos internos na memória:
 
-Este projeto implementa dois algoritmos críticos de manipulação de memória em **assembly x86-64** (sintaxe Intel), sem usar nenhuma biblioteca de alto nível. Código compilado direto para máquina, sem abstrações.
+**A | B | -1 | C | D | -1 | E | F**
 
-**Por que assembly?**
-- Controle absoluto sobre registradores e memória
-- Zero overhead de função (sem call stack desnecessário)
-- Operações bit a bit e byte a byte precisas
-- Ideal para otimizar estruturas de dados críticas
+##### Nota: -1 indica que o elemento é um burraco na memória
 
-## 🏗️ Duas Funções Principais
+⚠️ Nesse estado, os elementos válidos deixam de formar uma **sequência linear e compacta de memória**.
 
-### 1. **AlinharArray** — Elimina buracos do array
+A **Binary Search** depende do acesso direto aos elementos por índice e de uma sequência ordenada e contígua para reduzir o espaço de busca. Se a estrutura deixa de representar essa sequência, sua lógica de indexação deixa de ser válida.
 
-**O que faz:**
-Varre um array procurando por elementos marcados como `-1` (buracos/vazios) e os empurra para o final, compactando os dados válidos.
+O **Quick Sort** também trabalha sobre regiões contíguas do array, realizando particionamentos e movimentações entre elementos. Com espaços internos e elementos inválidos misturados aos dados, a estrutura precisa ser reorganizada antes da aplicação eficiente da rotina.
 
-**Algoritmo (Borbulhamento):**
-1. Percorre o array da esquerda pra direita
-2. Quando encontra `-1`, pega o elemento à direita
-3. Move esse elemento pra posição do buraco
-4. Marca a posição antiga com `-1`
-5. Continua até o fim
 
-**Assinatura:**
-```c
-extern void AlinharArray(int64_t *inicio, int64_t *fim);
-```
+### 🔨 A solução
 
-**Parâmetros:**
-- `RDI` (1º arg): endereço do primeiro elemento (`&array[0]`)
-- `RSI` (2º arg): endereço do último elemento (`&array[tamanho-1]`)
+Este projeto implementa duas rotinas em **Assembly x86-64** para resolver esse problema:
 
-**Retorno:**
-- Nenhum (modifica o array in-place)
+🔹 **AbrirVao**
+Desloca fisicamente blocos de memória para criar um espaço em um índice específico.
 
-**Exemplo Visual:**
+🔹 **AlinharArray**
+Localiza os vãos e desloca os elementos válidos para trás, restaurando a linearidade do array:
+
+```text
+A | B | -1 | C | D | -1 | E | F
+                ↓
+A | B | C | D | E | F | -1 | -1
 
 ```
-Antes:
-+----+----+----+----+----+----+----+----+----+----+
-| -1 | 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  | 9  |
-+----+----+----+----+----+----+----+----+----+----+
 
-Depois (array alinhado):
-+----+----+----+----+----+----+----+----+----+----+
-| 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  | 9  | -1 |
-+----+----+----+----+----+----+----+----+----+----+
+
+### 🧠 O diferencial
+
+As rotinas não conhecem o tipo dos elementos. O Assembly recebe apenas:
+
+```text
+📍 Endereço inicial
+📍 Endereço final
+📍 Posição da operação
+📏 Tamanho do elemento
 ```
 
----
+Assim, a mesma implementação pode reorganizar:
 
-### 2. **MoverMemoria** — Abre um vão no array
+✅ tipos primitivos
+✅ ponteiros
+✅ estruturas de dados complexas
 
-**O que faz:**
-Desloca elementos de um array para abrir um espaço (vão) em uma posição específica. 
+Tudo através de **ponteiros genéricos (`void *`) e movimentação direta de blocos na memória**.
 
-**Algoritmo (Deslocamento Progressivo):**
-1. Começa do último elemento
-2. Copia cada elemento 8 bytes pra frente
-3. Para quando atinge a posição do vão
-4. Marca o vão com `-1` (flag de buraco)
-5. O último elemento é perdido (sacrificado)
 
-**Assinatura:**
-```c
-extern int MoverMemoria(int64_t *inicio, int64_t *fim, int64_t *vao);
-```
+### ⚙️ Resultado
 
-**Parâmetros:**
-- `RDI` (1º arg): endereço do primeiro elemento (`&array[0]`)
-- `RSI` (2º arg): endereço do último elemento (`&array[tamanho-1]`)
-- `RDX` (3º arg): endereço onde abrir o vão (`&array[posicao]`)
+O projeto mantém os elementos válidos em uma **região linear e compacta da memória**, restaurando a estrutura necessária para que algoritmos de busca e ordenação baseados em arrays possam operar sobre os dados sem precisar lidar com vãos internos.
 
-**Retorno:**
-- `RAX = 0`: sucesso
-- `RAX = -1`: erro (vão tentaria estourar memória)
-
-**Exemplo Visual:**
-
-```
-Antes (array cheio):
-+----+----+----+----+----+----+----+----+----+----+
-| 0  | 2  | 4  | 6  | 8  | 10 | 12 | 14 | 16 | 18 |
-+----+----+----+----+----+----+----+----+----+----+
- 0    1    2    3    4    5    6    7    8    9
-
-Abrindo vão no índice 3:
-
-Depois:
-+----+----+----+----+----+----+----+----+----+----+
-| 0  | 2  | 4  | -1 | 6  | 8  | 10 | 12 | 14 | 16 |
-+----+----+----+----+----+----+----+----+----+----+
- 0    1    2    3    4    5    6    7    8    9
-             ^
-          Vão aberto
-          (marcado com -1, último elemento 18 foi perdido)
-```
-
----
-
-## 💻 Como Compilar
-
-**Arquivo assembly:** `mover_memoria.s`  
-**Arquivo C:** `main.c`
-
-```bash
-gcc main.c mover_memoria.s -o programa
-./programa
-```
-
-Pronto! Sem flags especiais, sem bibliotecas externas.
-
----
-
-## 🧪 Teste em Execução
-
-```
-$ thermius@arch: ./programa
-Antes da chamada assembly para alinhar o array:
+### 🖥️ Saida
+```text
+thermius@arch: ./a.out 
+Antes da chamada assembly para ABRIR UM VÃO:
+1
+11
+21
+31
+41
+51
+61
+71
+81
+91
+101
+111
+121
+131
+141
+151
+161
+171
+181
+191
+Vão aberto no incide 3:
+1
+11
+21
 -1
-10
-10
-10
-10
-10
-10
-10
-10
-10
-Depois da chamada assembly:
-10
-10
-10
-10
-10
-10
-10
-10
-10
+31
+41
+51
+61
+71
+81
+91
+101
+111
+121
+131
+141
+151
+161
+171
+181
+Vão aberto no incide 8:
+1
+11
+21
 -1
-Antes da chamada assembly para abri um vao:
-10
-10
-10
-10
-10
-10
-10
-10
-10
-10
-Depois da chamada assembly para abri um vao:
-10
-10
-10
-10
-10
-10
-10
-10
+31
+41
+51
+61
 -1
-10
-**Vão aberto no índice 8, marcado com -1**
+71
+81
+91
+101
+111
+121
+131
+141
+151
+161
+171
+Vão aberto no incide penultimo indice:
+1
+11
+21
+-1
+31
+41
+51
+61
+-1
+71
+81
+91
+101
+111
+121
+131
+141
+151
+-1
+161
+
+Chamando assembly para alinhar array
+Array alinhado:
+1
+11
+21
+31
+41
+51
+61
+71
+81
+91
+101
+111
+121
+131
+141
+151
+161
+-1
+-1
+-1
+
+*********************Demostração de estrutura complexa***********************
+Tamanho da struct: 64 bytes
+
+ANTES:
+[00] ID: 1 | Nome: Ana          | Idade: 25 | DDD: 71 | Telefone: 999111111 | Salario: 2500.00
+[01] ID: 2 | Nome: Bruno        | Idade: 31 | DDD: 71 | Telefone: 999222222 | Salario: 3200.00
+[02] ID: 3 | Nome: Carlos       | Idade: 42 | DDD: 71 | Telefone: 999333333 | Salario: 4500.00
+[03] ID: 4 | Nome: Diana        | Idade: 28 | DDD: 71 | Telefone: 999444444 | Salario: 2800.00
+[04] ID: 5 | Nome: Eduardo      | Idade: 35 | DDD: 71 | Telefone: 999555555 | Salario: 3900.00
+[05] ID: 6 | Nome: Fernanda     | Idade: 22 | DDD: 71 | Telefone: 999666666 | Salario: 2100.00
+[06] ID: 7 | Nome: Gabriel      | Idade: 39 | DDD: 71 | Telefone: 999777777 | Salario: 5000.00
+[07] ID: 8 | Nome: Helena       | Idade: 27 | DDD: 71 | Telefone: 999888888 | Salario: 3100.00
+[08] ID: 9 | Nome: Igor         | Idade: 45 | DDD: 71 | Telefone: 999999999 | Salario: 6200.00
+[09] ID: 10 | Nome: Julia        | Idade: 33 | DDD: 71 | Telefone: 998111111 | Salario: 3700.00
+[10] ID: 11 | Nome: Kleber       | Idade: 29 | DDD: 71 | Telefone: 998222222 | Salario: 2900.00
+[11] ID: 12 | Nome: Larissa      | Idade: 41 | DDD: 71 | Telefone: 998333333 | Salario: 4300.00
+[12] ID: 13 | Nome: Marcos       | Idade: 26 | DDD: 71 | Telefone: 998444444 | Salario: 2700.00
+[13] ID: 14 | Nome: Natalia      | Idade: 38 | DDD: 71 | Telefone: 998555555 | Salario: 5100.00
+[14] ID: 15 | Nome: Otavio       | Idade: 24 | DDD: 71 | Telefone: 998666666 | Salario: 2300.00
+[15] ID: 16 | Nome: Patricia     | Idade: 36 | DDD: 71 | Telefone: 998777777 | Salario: 4100.00
+[16] ID: 17 | Nome: Rafael       | Idade: 30 | DDD: 71 | Telefone: 998888888 | Salario: 3500.00
+[17] ID: 18 | Nome: Sabrina      | Idade: 44 | DDD: 71 | Telefone: 998999999 | Salario: 5800.00
+[18] ID: 19 | Nome: Thiago       | Idade: 32 | DDD: 71 | Telefone: 997111111 | Salario: 3900.00
+[19] ID: 20 | Nome: Vanessa      | Idade: 37 | DDD: 71 | Telefone: 997222222 | Salario: 4700.00
+
+DEPOIS DO VAO NO INDICE 3:
+[00] ID: 1 | Nome: Ana          | Idade: 25 | DDD: 71 | Telefone: 999111111 | Salario: 2500.00
+[01] ID: 2 | Nome: Bruno        | Idade: 31 | DDD: 71 | Telefone: 999222222 | Salario: 3200.00
+[02] ID: 3 | Nome: Carlos       | Idade: 42 | DDD: 71 | Telefone: 999333333 | Salario: 4500.00
+[03] ID: -1 | Nome: Carlos       | Idade: 42 | DDD: 71 | Telefone: 999333333 | Salario: 4500.00
+[04] ID: 4 | Nome: Diana        | Idade: 28 | DDD: 71 | Telefone: 999444444 | Salario: 2800.00
+[05] ID: 5 | Nome: Eduardo      | Idade: 35 | DDD: 71 | Telefone: 999555555 | Salario: 3900.00
+[06] ID: 6 | Nome: Fernanda     | Idade: 22 | DDD: 71 | Telefone: 999666666 | Salario: 2100.00
+[07] ID: 7 | Nome: Gabriel      | Idade: 39 | DDD: 71 | Telefone: 999777777 | Salario: 5000.00
+[08] ID: 8 | Nome: Helena       | Idade: 27 | DDD: 71 | Telefone: 999888888 | Salario: 3100.00
+[09] ID: 9 | Nome: Igor         | Idade: 45 | DDD: 71 | Telefone: 999999999 | Salario: 6200.00
+[10] ID: 10 | Nome: Julia        | Idade: 33 | DDD: 71 | Telefone: 998111111 | Salario: 3700.00
+[11] ID: 11 | Nome: Kleber       | Idade: 29 | DDD: 71 | Telefone: 998222222 | Salario: 2900.00
+[12] ID: 12 | Nome: Larissa      | Idade: 41 | DDD: 71 | Telefone: 998333333 | Salario: 4300.00
+[13] ID: 13 | Nome: Marcos       | Idade: 26 | DDD: 71 | Telefone: 998444444 | Salario: 2700.00
+[14] ID: 14 | Nome: Natalia      | Idade: 38 | DDD: 71 | Telefone: 998555555 | Salario: 5100.00
+[15] ID: 15 | Nome: Otavio       | Idade: 24 | DDD: 71 | Telefone: 998666666 | Salario: 2300.00
+[16] ID: 16 | Nome: Patricia     | Idade: 36 | DDD: 71 | Telefone: 998777777 | Salario: 4100.00
+[17] ID: 17 | Nome: Rafael       | Idade: 30 | DDD: 71 | Telefone: 998888888 | Salario: 3500.00
+[18] ID: 18 | Nome: Sabrina      | Idade: 44 | DDD: 71 | Telefone: 998999999 | Salario: 5800.00
+[19] ID: 19 | Nome: Thiago       | Idade: 32 | DDD: 71 | Telefone: 997111111 | Salario: 3900.00
+
+DEPOIS DO VAO NO INDICE 8:
+[00] ID: 1 | Nome: Ana          | Idade: 25 | DDD: 71 | Telefone: 999111111 | Salario: 2500.00
+[01] ID: 2 | Nome: Bruno        | Idade: 31 | DDD: 71 | Telefone: 999222222 | Salario: 3200.00
+[02] ID: 3 | Nome: Carlos       | Idade: 42 | DDD: 71 | Telefone: 999333333 | Salario: 4500.00
+[03] ID: -1 | Nome: Carlos       | Idade: 42 | DDD: 71 | Telefone: 999333333 | Salario: 4500.00
+[04] ID: 4 | Nome: Diana        | Idade: 28 | DDD: 71 | Telefone: 999444444 | Salario: 2800.00
+[05] ID: 5 | Nome: Eduardo      | Idade: 35 | DDD: 71 | Telefone: 999555555 | Salario: 3900.00
+[06] ID: 6 | Nome: Fernanda     | Idade: 22 | DDD: 71 | Telefone: 999666666 | Salario: 2100.00
+[07] ID: 7 | Nome: Gabriel      | Idade: 39 | DDD: 71 | Telefone: 999777777 | Salario: 5000.00
+[08] ID: -1 | Nome: Gabriel      | Idade: 39 | DDD: 71 | Telefone: 999777777 | Salario: 5000.00
+[09] ID: 8 | Nome: Helena       | Idade: 27 | DDD: 71 | Telefone: 999888888 | Salario: 3100.00
+[10] ID: 9 | Nome: Igor         | Idade: 45 | DDD: 71 | Telefone: 999999999 | Salario: 6200.00
+[11] ID: 10 | Nome: Julia        | Idade: 33 | DDD: 71 | Telefone: 998111111 | Salario: 3700.00
+[12] ID: 11 | Nome: Kleber       | Idade: 29 | DDD: 71 | Telefone: 998222222 | Salario: 2900.00
+[13] ID: 12 | Nome: Larissa      | Idade: 41 | DDD: 71 | Telefone: 998333333 | Salario: 4300.00
+[14] ID: 13 | Nome: Marcos       | Idade: 26 | DDD: 71 | Telefone: 998444444 | Salario: 2700.00
+[15] ID: 14 | Nome: Natalia      | Idade: 38 | DDD: 71 | Telefone: 998555555 | Salario: 5100.00
+[16] ID: 15 | Nome: Otavio       | Idade: 24 | DDD: 71 | Telefone: 998666666 | Salario: 2300.00
+[17] ID: 16 | Nome: Patricia     | Idade: 36 | DDD: 71 | Telefone: 998777777 | Salario: 4100.00
+[18] ID: 17 | Nome: Rafael       | Idade: 30 | DDD: 71 | Telefone: 998888888 | Salario: 3500.00
+[19] ID: 18 | Nome: Sabrina      | Idade: 44 | DDD: 71 | Telefone: 998999999 | Salario: 5800.00
+
+DEPOIS DO VAO NO PENULTIMO INDICE:
+[00] ID: 1 | Nome: Ana          | Idade: 25 | DDD: 71 | Telefone: 999111111 | Salario: 2500.00
+[01] ID: 2 | Nome: Bruno        | Idade: 31 | DDD: 71 | Telefone: 999222222 | Salario: 3200.00
+[02] ID: 3 | Nome: Carlos       | Idade: 42 | DDD: 71 | Telefone: 999333333 | Salario: 4500.00
+[03] ID: -1 | Nome: Carlos       | Idade: 42 | DDD: 71 | Telefone: 999333333 | Salario: 4500.00
+[04] ID: 4 | Nome: Diana        | Idade: 28 | DDD: 71 | Telefone: 999444444 | Salario: 2800.00
+[05] ID: 5 | Nome: Eduardo      | Idade: 35 | DDD: 71 | Telefone: 999555555 | Salario: 3900.00
+[06] ID: 6 | Nome: Fernanda     | Idade: 22 | DDD: 71 | Telefone: 999666666 | Salario: 2100.00
+[07] ID: 7 | Nome: Gabriel      | Idade: 39 | DDD: 71 | Telefone: 999777777 | Salario: 5000.00
+[08] ID: -1 | Nome: Gabriel      | Idade: 39 | DDD: 71 | Telefone: 999777777 | Salario: 5000.00
+[09] ID: 8 | Nome: Helena       | Idade: 27 | DDD: 71 | Telefone: 999888888 | Salario: 3100.00
+[10] ID: 9 | Nome: Igor         | Idade: 45 | DDD: 71 | Telefone: 999999999 | Salario: 6200.00
+[11] ID: 10 | Nome: Julia        | Idade: 33 | DDD: 71 | Telefone: 998111111 | Salario: 3700.00
+[12] ID: 11 | Nome: Kleber       | Idade: 29 | DDD: 71 | Telefone: 998222222 | Salario: 2900.00
+[13] ID: 12 | Nome: Larissa      | Idade: 41 | DDD: 71 | Telefone: 998333333 | Salario: 4300.00
+[14] ID: 13 | Nome: Marcos       | Idade: 26 | DDD: 71 | Telefone: 998444444 | Salario: 2700.00
+[15] ID: 14 | Nome: Natalia      | Idade: 38 | DDD: 71 | Telefone: 998555555 | Salario: 5100.00
+[16] ID: 15 | Nome: Otavio       | Idade: 24 | DDD: 71 | Telefone: 998666666 | Salario: 2300.00
+[17] ID: 16 | Nome: Patricia     | Idade: 36 | DDD: 71 | Telefone: 998777777 | Salario: 4100.00
+[18] ID: -1 | Nome: Patricia     | Idade: 36 | DDD: 71 | Telefone: 998777777 | Salario: 4100.00
+[19] ID: 17 | Nome: Rafael       | Idade: 30 | DDD: 71 | Telefone: 998888888 | Salario: 3500.00
+
+ALINHANDO ARRAY:
+DEPOIS DO ALINHAMENTO:
+[00] ID: 1 | Nome: Ana          | Idade: 25 | DDD: 71 | Telefone: 999111111 | Salario: 2500.00
+[01] ID: 2 | Nome: Bruno        | Idade: 31 | DDD: 71 | Telefone: 999222222 | Salario: 3200.00
+[02] ID: 3 | Nome: Carlos       | Idade: 42 | DDD: 71 | Telefone: 999333333 | Salario: 4500.00
+[03] ID: 4 | Nome: Diana        | Idade: 28 | DDD: 71 | Telefone: 999444444 | Salario: 2800.00
+[04] ID: 5 | Nome: Eduardo      | Idade: 35 | DDD: 71 | Telefone: 999555555 | Salario: 3900.00
+[05] ID: 6 | Nome: Fernanda     | Idade: 22 | DDD: 71 | Telefone: 999666666 | Salario: 2100.00
+[06] ID: 7 | Nome: Gabriel      | Idade: 39 | DDD: 71 | Telefone: 999777777 | Salario: 5000.00
+[07] ID: 8 | Nome: Helena       | Idade: 27 | DDD: 71 | Telefone: 999888888 | Salario: 3100.00
+[08] ID: 9 | Nome: Igor         | Idade: 45 | DDD: 71 | Telefone: 999999999 | Salario: 6200.00
+[09] ID: 10 | Nome: Julia        | Idade: 33 | DDD: 71 | Telefone: 998111111 | Salario: 3700.00
+[10] ID: 11 | Nome: Kleber       | Idade: 29 | DDD: 71 | Telefone: 998222222 | Salario: 2900.00
+[11] ID: 12 | Nome: Larissa      | Idade: 41 | DDD: 71 | Telefone: 998333333 | Salario: 4300.00
+[12] ID: 13 | Nome: Marcos       | Idade: 26 | DDD: 71 | Telefone: 998444444 | Salario: 2700.00
+[13] ID: 14 | Nome: Natalia      | Idade: 38 | DDD: 71 | Telefone: 998555555 | Salario: 5100.00
+[14] ID: 15 | Nome: Otavio       | Idade: 24 | DDD: 71 | Telefone: 998666666 | Salario: 2300.00
+[15] ID: 16 | Nome: Patricia     | Idade: 36 | DDD: 71 | Telefone: 998777777 | Salario: 4100.00
+[16] ID: 17 | Nome: Rafael       | Idade: 30 | DDD: 71 | Telefone: 998888888 | Salario: 3500.00
+[17] ID: -1 | Nome: Patricia     | Idade: 36 | DDD: 71 | Telefone: 998777777 | Salario: 4100.00
+[18] ID: -1 | Nome: Patricia     | Idade: 36 | DDD: 71 | Telefone: 998777777 | Salario: 4100.00
+[19] ID: -1 | Nome: Rafael       | Idade: 30 | DDD: 71 | Telefone: 998888888 | Salario: 3500.00
+
+thermius@arch: 
+
 ```
-
-**O que aconteceu:**
-
-1. **AlinharArray**: buraco no índice 0 foi empurrado pro final
-2. **MoverMemoria**: vão aberto no índice 8, elementos deslocados pra direita, último elemento perdido
-
----
-
-## 📊 Detalhes Técnicos
-
-### Convenções de Chamada (ABI Linux x86-64)
-
-Os argumentos são passados em registradores (não na pilha):
-
-| Argumento | Registrador |
-|-----------|------------|
-| 1º | RDI |
-| 2º | RSI |
-| 3º | RDX |
-| Retorno | RAX |
-
-### Tamanho dos Dados
-
-**Tudo é 8 bytes (64 bits)**, correspondente a `int64_t`:
-- `ADD R8, 8` → próximo elemento
-- `SUB R10, 8` → elemento anterior
-- `MOV [R8], R10` → copia 8 bytes
-
-Se mudar o tamanho dos dados, ajuste todos os offsets de 8 bytes.
-
----
-
-## 🔬 Conceitos Demonstrados
-
-- ✅ Aritmética de ponteiros em assembly
-- ✅ Desreferência de memória (`MOV RAX, [R10]`)
-- ✅ Loops e labels (VERIFICAR, COPIA, DESLOCAR)
-- ✅ Comparação e saltos condicionais (CMP, JG, JLE, JE)
-- ✅ Validação de bounds (verificar se vai estourar memória)
-- ✅ Retorno de valores (RAX)
-- ✅ Sintaxe Intel assembly (`.intel_syntax noprefix`)
-
----
-
-## 📚 Referências
-
-- **Intel x86-64 ISA Manual** — Referência de instruções
-- **System V AMD64 ABI** — Convenções de chamada Linux
-
----
-
-## 🎓 Conhecimentos Demonstrados
-
-- ✅ Assembly x86-64 proficiente
-- ✅ Manipulação direta de memória
-- ✅ Otimização de baixo nível
-- ✅ Interfaces C↔Assembly
-- ✅ Debugging e validação de bounds
-- ✅ Documentação clara de código assembly
-
----
-
-## 📝 Limitações & Notas
-
-- Dados devem ter **exatamente 8 bytes** (int64_t)
-- Arrays devem estar **contíguos em memória**
-- Flag de buraco/vão: **-1**
-  - Tanto `AlinharArray` quanto `MoverMemoria` usam `-1` como marcador
-  - Permite que as duas funções trabalhem juntas
-- `AlinharArray` processa **um buraco por chamada**
-  - Para múltiplos buracos consecutivos, chamar novamente
-- `MoverMemoria` **perde o último elemento** ao abrir vão
-  - Isso permite abrir espaço sem realocar a memória
-
----
-
-## 📄 Licença
+### 📄 Licença
 
 Todos os direitos reservados.
 
