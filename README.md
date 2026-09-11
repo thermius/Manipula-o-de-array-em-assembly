@@ -62,6 +62,8 @@ Tudo através de **ponteiros genéricos (`void *`) e movimentação direta de bl
 O projeto mantém os elementos válidos em uma **região linear e compacta da memória**, restaurando a estrutura necessária para que algoritmos de busca e ordenação baseados em arrays possam operar sobre os dados sem precisar lidar com vãos internos.
 
 ### 🖥️ Saida
+Demostração de uso no terminal:
+
 ```text
 thermius@arch: ./a.out 
 Antes da chamada assembly para ABRIR UM VÃO:
