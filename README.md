@@ -48,9 +48,11 @@ As rotinas não conhecem o tipo dos elementos. O Assembly recebe apenas:
 
 Assim, a mesma implementação pode reorganizar:
 
-✅ tipos primitivos
-✅ ponteiros
-✅ estruturas de dados complexas
+✅ **Tipos primitivos**
+
+✅ **Ponteiros**
+
+✅ **Estruturas de dados complexas**
 
 Tudo através de **ponteiros genéricos (`void *`) e movimentação direta de blocos na memória**.
 
