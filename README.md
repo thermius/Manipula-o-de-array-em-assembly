@@ -1,5 +1,5 @@
 # Manipula-o-de-array-em-assembly
-Rotinas de baixo nível para abertura dinâmica de vãos e alinhamento de arrays, desenvolvidas em Assembly x86-64 e integradas a programas C.
+Rotinas de baixo nível para abertura dinâmica de vãos e alinhamento de arrays, desenvolvidas em Assembly x86-64 para optmização de algoritmos e integradas a código C.
 
 ## 🎯 Problema que o projeto resolve
 
