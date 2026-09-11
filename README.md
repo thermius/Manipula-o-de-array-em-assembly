@@ -45,7 +45,8 @@ As rotinas não conhecem o tipo dos elementos. O Assembly recebe apenas:
 📍 Posição da operação
 📏 Tamanho do elemento
 ```
-Nessa versão final, o algoritmo consegue:
+Nessa versão final, o algoritmo consegue:<br>
+
 ✅ Alinhar o array em uma única chamada<br>
 ✅ Abrir vãos em índices específicos<br>
 ✅ Manipular tipos primitivos e ponteiros<br>
