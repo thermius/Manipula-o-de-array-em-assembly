@@ -25,107 +25,128 @@ Argumentos:
     1. Em RDI estará o endereço do indice 0 do array;
     2. Em RSI estará o endereço do ultimo indice do array;
     3. Em RDX estará o endereço onde o vão deve ser aberto;
-
+    4. Em RCX estará o tamanho do dado
  */
 
-    /*Valida se haverá ou não estouro de memoria*/
-    MOV R10, RDX           /*Carrega R10 com o endereço onde o vão vai ser aberto*/
-    ADD R10, 8             /*Soma 8 em R10 para saber se irá ou não estourar a memoria*/
-    CMP R10, RSI           /*Compara para saber se o vão irá estourar a memoria*/
-    JG  FIM_ERRO           /*Se maior, haverá estouro. Salta para a rotina de erro*/
+    /*Verifições de logica*/
+    CMP RDI, RSI
+    JE FIM_ERRO_TAMANHO             /*Se array unitário, retorna*/
+    CMP RDX, RSI    
+    JE FIM_ERRO_TAMANHO             /*Se tentar abri vão no ultimo indice, retorna*/
 
-    /*Carrega para R10 o endereço do ultimo elemento do array*/
-    MOV R10, RSI
+    TEST RCX, 7                     /*Verifica se o tamanho do dado é multiplo de 8*/
+    JNZ FIM_ERRO_TAMANHO
+    MOV R9, RCX                     /*Salva o tamanho dado*/
+    SHR RCX, 3                      /*Divide o tamanho por 8 para encontrar quantas vezes MOVQ deve-se repetir*/
 
-  /*Copia os bytes efetivamente de 8 em 8*/
-COPIA:
-    SUB R10, 8                /*Subtrai 8 de R10, apontado para o penultino elemento*/
-    MOV RAX, [R10]            /*Carrega RAX com o conteudo apontado por R10*/
-    MOV [R10 + 8],  RAX       /*Copia os dados do penulimo elemento para o ultimo elemento, de forma a deslocar*/
-    CMP R10, RDX              /*Compara com o endereço onde o vão deve ser aberto. Se menor ou igual, o vão já está aberto. Encerramos*/
-    JLE FIM_SUCESSO_MOVER_MEMORIA
-    JMP COPIA
+LOOP_DESLOCAR:
+    SUB RSI,R9                      /*Aponta RSI para o PENULTIMO elemento*/
+    MOV R8, RSI                     /*R8 e RSI apontam para o penultimo elemento*/
+    ADD R8, R9                      /*Aponta R8 para o ULTIMO elemento*/
 
-FIM_ERRO:
-    MOV RAX, -1             /*Retorna -1*/
+    MOV RDI, R8                     /*Destino da copia*/
+    MOV RSI, RSI                    /*Origem da copia. INUTIL. Somente coloquei pra formalizar como REP e MOVQ funcionam*/
+    MOV RCX, RCX                    /*Quantas vezes repetir a copia. INUTIL. Somente coloquei pra formalizar como REP e MOVQ funcionam*/
+    PUSH RSI                        /*Salva RSI*/
+    REP MOVSQ                       /*Copia de 8 em 8 a quantidade de vezes em RCX e avança RSI. RCX fica zerado ao finalizar*/
+    POP RSI                         /*Recupera RSI*/
+    CMP RSI, RDX                     
+    JL FIM_SUCESSO_MOVER_TAMANHO
+    MOV RCX, R9                     /*Recupera RCX*/
+    SHR RCX, 3                      /*Divide o tamanho por 8 para encontrar quantas vezes MOVQ deve-se repetir*/                
+    JMP LOOP_DESLOCAR
+
+FIM_SUCESSO_MOVER_TAMANHO:
+    ADD RSI, R9
+    MOV QWORD PTR [RSI], -1
+    MOV RAX, 0
     RET
 
-FIM_SUCESSO_MOVER_MEMORIA:
-    MOV QWORD PTR [R10], -1 /*Marca o vão com -1*/
-    MOV RAX, 0              /*Retorna 0*/
-    RET
 
 
 AlinharArray:
+
 /*
-
-Descrição:
-    Varre o array da esquerda para a direita procurando elementos vazios (buracos)
-    e alinha a estrutura movendo os dados válidos para trás.
-
-Funcionamento (Algoritmo de Borbulhamento):
-    - O valor reservado como flag de buraco é o -1 (elemento sem uso).
-    - Quando um buraco é encontrado, ele troca de lugar consecutivamente com
-      os elementos à sua direita.
-    - Esse processo "chuta" o buraco de -1 até a última posição física do array.
-
--------------------------------------------------------------------------------
-Exemplo Visual 1 (Buraco no meio do array):
-    Imagine que o índice 3 foi deletado e recebeu a flag -1.
-
-    Antes da chamada:
-    +----+----+----+----+----+----+----+----+----+----+
-    | 10 | 20 | 30 | -1 | 50 | 60 | 70 | 80 | 90 |100 |
-    +----+----+----+----+----+----+----+----+----+----+
-      0    1    2    3    4    5    6    7    8    9   (Índices)
-                     ^
-                  Buraco!
-
-    Depois da chamada (Alinhado):
-    +----+----+----+----+----+----+----+----+----+----+
-    | 10 | 20 | 30 | 50 | 60 | 70 | 80 | 90 |100 | -1 |
-    +----+----+----+----+----+----+----+----+----+----+
-      0    1    2    3    4    5    6    7    8    9   (Índices)
-                                                   ^
-                                            Buraco isolado no fim
-
 Argumentos:
     1. Em RDI estará o endereço do indice 0 do array;
     2. Em RSI estará o endereço do ultimo indice do array;
-*/
-
-Argumentos:
-    1. Em RDI estará o endereço do indice 0 do array;
-    2. Em RSI estará o endereço do ultimo indice do array;
-*/
-
-    MOV R8, RDI         /*Carrega R8 com o valor do inicio do array*/
-
-VERIFICAR:
-   CMP R8,RSI           /*Se R8 for igual o ultimo indice, retorna*/
-   JGE FIM_SUCESSO_ALINHAR_ARRAY
-   MOV R9, [R8]         /*Pega o elemento apontado por R8*/
-   CMP R9, -1           /*Compara com -1*/
-   JE DESLOCAR
-   ADD R8, 8
-   JMP VERIFICAR
-
-DESLOCAR:
-    MOV R11, R8             /*Carrega R11 com R8*/
-    ADD R11, 8              /*Aponta R11 para o proximo elemento do array*/
-
-    MOV R10, [R11]          /*Não é permitir mover de memoria para memoria. Então usamos R10 para guardar o conteudo apontado por R11*/
-    MOV [R8], R10           /*Pega o elemento a frente (R11) e joga para tras (R8)*/
-    MOV R10, -1             /*Marca o proximo elemento como burraco*/
-    MOV [R11], R10          /*Marca o proximo elemento como burraco*/
-    ADD R8, 8               /*Avança 1 elemento do array*/
-    ADD R11,8               /*Avança 1 elemento do array*/
-    CMP R8, RSI             /*Se R8 chegar no final, R11 estará apontado pra fora do array. Sucesso*/
-    JE FIM_SUCESSO_ALINHAR_ARRAY
-    JMP VERIFICAR
-
+    3. Em RDX estará o tamanho do dado a ser deslocado;
+    Limitação atual: não verifica se o tamanho do dado informado é multiplo de 8
+*/  
     
-FIM_SUCESSO_ALINHAR_ARRAY:
-    MOV RAX, 0              /*Retorna 0*/
+    /*Verificamos se o tamanho do dado é multiplo de 8 por meio do modulo da divisão*/
+    TEST RDX, 7                 /*Verifica se o tamanho do dado é multiplo de 8*/
+    JNZ FIM_ERRO_TAMANHO
+
+    PUSH RBX                    /*Called saved*/
+    PUSH R15                    /*Called saved*/
+
+ALINHAR_ARRAY:
+    CMP RDI, RSI                /*Se tentar alinhar array de um unico elemento, retorna*/
+    JGE FIM_ERRO_ALINHAR        /*Retorna erro*/
+    MOV R8, [RDI]               /*Carrega R8 com o conteudo apontado por RDI*/
+    CMP R8, -1                  /*Verifica se R8 é um burraco*/
+    JE DESLOCAMENTO             /*Se burraco, vai pra rotina que desloca*/
+    ADD RDI, RDX                /*Se não for burraco avança RDI o tamanho do dado*/
+    JMP ALINHAR_ARRAY           /*Repete o algoritmo*/
+
+DESLOCAMENTO:
+    MOV R10, 0                  /*Contador de descolamento de memoria*/
+    MOV RAX, RDI                /*Carrega RAX com o endereço de memoria onde o burraco foi encontrado*/
+
+REPETIR_ALINHAMENTO:
+    MOV RBX, RAX                /*Carrega RBX com RAX*/
+
+AVANCAR_RBX_SALVANDO:
+    ADD RBX, RDX                /*Avança RBX*/
+    MOV R15, RSI                /*Calcula o endereço onde estoura o array*/
+    ADD R15, RDX                /*Calcula o endereço onde estoura o array*/
+    CMP RBX, R15
+    JE FIM_SUCESSO              /*Se chegar ao fim do array, já estamos alinhado*/
+    MOV R8, [RBX]               /*Carrega R8 com o conteudo apontado por RBX*/
+    CMP R8, -1          
+    JE AVANCAR_RBX_SALVANDO     /*Avança RBX se burraco*/
+    MOV R9, RBX                 /*Salva RBX em R9*/
+    JMP MOVER_BYTES             /*Salta pra rotina que move os bytes*/
+
+AVANCAR_RBX_SEM_SALVAR:
+    ADD RBX, RDX                /*Avança RBX*/
+    MOV R15, RSI                /*Calcula o endereço onde estoura o array*/
+    ADD R15, RDX                /*Calcula o endereço onde estoura o array*/
+    CMP RBX, R15
+    JE FIM_SUCESSO              /*Se chegar ao fim do array, já estamos alinhado*/
+    MOV R8, [RBX]               /*Carrega R8 com o conteudo apontado por RBX*/
+    CMP R8, -1          
+    JE AVANCAR_RBX_SEM_SALVAR   /*Avança RBX se burraco*/
+
+MOVER_BYTES:
+    
+    PUSH RSI
+    PUSH RDI
+    MOV RSI, RBX                /*Preparação de MOVSQ*/
+    MOV RDI, RAX                /*Preparação de MOVSQ*/
+    MOV RCX, RDX                /*Preparação de MOVSQ*/
+    SHR RCX, 3                  /*Preparação de MOVSQ*/
+    REP MOVSQ
+    POP RDI
+    POP RSI
+    MOV QWORD PTR [RBX], -1     /*Adciona um burraco no lugar onde foi copiado*/
+    INC R10                     /*Contabiliza o deslocamento*/   
+    ADD RAX, RDX                /*Avança RAX*/
+    CMP RAX, R9         
+    JE REPETIR_ALINHAMENTO
+    JMP AVANCAR_RBX_SEM_SALVAR
+
+FIM_SUCESSO:
+    POP R15
+    POP RBX
+    MOV RAX, R10                    /*Retorna a quantidade de deslocamentos realizadas*/
     RET
 
+FIM_ERRO_ALINHAR:
+    POP R15
+    POP RBX
+
+FIM_ERRO_TAMANHO:
+    MOV RAX, -1
+    RET
