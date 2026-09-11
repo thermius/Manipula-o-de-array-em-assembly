@@ -50,8 +50,7 @@ Nessa versão final, o algoritmo consegue:
 ✅ Alinhar o array em uma única chamada
 ✅ Abrir vãos em índices específicos
 ✅ Manipular tipos primitivos e ponteiros
-✅ Trabalhar com estruturas complexas do C estilo:
-
+✅ Trabalhar com estruturas complexas do C
 
 ```text
 
