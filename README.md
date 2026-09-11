@@ -45,14 +45,30 @@ As rotinas não conhecem o tipo dos elementos. O Assembly recebe apenas:
 📍 Posição da operação
 📏 Tamanho do elemento
 ```
+Nessa versão final, o algoritmo consegue:
 
-Assim, a mesma implementação pode reorganizar:
+✅ Alinhar o array em uma única chamada
+✅ Abrir vãos em índices específicos
+✅ Manipular tipos primitivos e ponteiros
+✅ Trabalhar com estruturas complexas do C estilo:
 
-✅ **Tipos primitivos**
 
-✅ **Ponteiros**
+```text
 
-✅ **Estruturas de dados complexas**
+typedef struct {
+
+    int64_t id;
+    int32_t idade;
+    int32_t ddd;
+    int64_t telefone;
+    char nome[32];
+    double salario;
+} Pessoa;
+
+```
+
+
+
 
 Tudo através de **ponteiros genéricos (`void *`) e movimentação direta de blocos na memória**.
 
