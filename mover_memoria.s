@@ -1,9 +1,9 @@
 .intel_syntax noprefix
-.global MoverMemoria, AlinharArray
+.global AbrirVao, AlinharArray
 
 .text
 
-MoverMemoria:
+AbrirVao:
 /*Descrição:
 
  * Desloca um bloco de 8 bytes memória para abrir um espaço entre elementos.
@@ -28,7 +28,6 @@ Argumentos:
     4. Em RCX estará o tamanho do dado
  */
 
-    /*Verifições de logica*/
     CMP RDI, RSI
     JE FIM_ERRO_TAMANHO             /*Se array unitário, retorna*/
     CMP RDX, RSI    
