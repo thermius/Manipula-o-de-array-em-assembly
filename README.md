@@ -46,10 +46,9 @@ As rotinas não conhecem o tipo dos elementos. O Assembly recebe apenas:
 📏 Tamanho do elemento
 ```
 Nessa versão final, o algoritmo consegue:
-
-✅ Alinhar o array em uma única chamada
-✅ Abrir vãos em índices específicos
-✅ Manipular tipos primitivos e ponteiros
+✅ Alinhar o array em uma única chamada<br>
+✅ Abrir vãos em índices específicos<br>
+✅ Manipular tipos primitivos e ponteiros<br>
 ✅ Trabalhar com estruturas complexas do C
 
 ```text
