@@ -19,7 +19,6 @@ AbrirVao:
  * Abrindo um espaço entre 25 e 40:
  *   |10|25|  |40|
  * Observe que, o ultimo elemento sempre é perdido. O lugar onde o vão é aberto recebe o valor -1
- * IMPORTATE: O dado sempre deve ter 8 bytes. Se isso não for respeitado, o resultado é indefinido.
 
 Argumentos:
     1. Em RDI estará o endereço do indice 0 do array;
@@ -70,7 +69,6 @@ Argumentos:
     1. Em RDI estará o endereço do indice 0 do array;
     2. Em RSI estará o endereço do ultimo indice do array;
     3. Em RDX estará o tamanho do dado a ser deslocado;
-    Limitação atual: não verifica se o tamanho do dado informado é multiplo de 8
 */  
     
     /*Verificamos se o tamanho do dado é multiplo de 8 por meio do modulo da divisão*/
